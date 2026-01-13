@@ -1,5 +1,6 @@
 package com.atila.model;
 
+import com.atila.Enums.Role;
 import com.atila.Enums.StatusMember;
 
 public class Member {
@@ -18,11 +19,15 @@ public class Member {
     public String user;
     public String password;
 
+    public Role role;
+
+    
+
     public Member(){
 
     }
 
-    public Member(Integer id, String name, String email, String phone, StatusMember status, Integer library_id,String user,String password) {
+    public Member(Integer id, String name, String email, String phone, StatusMember status, Integer library_id,String user,String password,Role role) {
 
         if (name == null) {
             throw new IllegalArgumentException("Name cannot be null");
@@ -51,6 +56,7 @@ public class Member {
         this.library_id = library_id;
         this.user = user;
         this.password = password;
+        this.role = role;
     }
 
     public Integer getId() {
@@ -107,6 +113,14 @@ public class Member {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public Role getRole() {
+        return role;
+    }
+
+    public void setRole(Role role) {
+        this.role = role;
     }
 
 }

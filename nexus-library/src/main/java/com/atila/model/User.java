@@ -1,5 +1,7 @@
 package com.atila.model;
 
+import com.atila.Enums.Role;
+
 public class User {
 
     public Integer id;
@@ -12,10 +14,14 @@ public class User {
 
     public String user;
 
+    public String role;
+
+   
+
     public User() {
     }
 
-    public User(String name, String email, String phone, String user, Integer id) {
+    public User(String name, String email, String phone, String user, Integer id,String role) {
 
         if (name == null) {
             throw new IllegalArgumentException("Name cannot be null");
@@ -34,6 +40,7 @@ public class User {
         this.phone = phone;
         this.user = user;
         this.id = id;
+        this.role=role;
     }
 
     public String getName() {
@@ -74,5 +81,12 @@ public class User {
 
     public void setId(Integer id) {
         this.id = id;
+    }
+     public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

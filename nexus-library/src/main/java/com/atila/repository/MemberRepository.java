@@ -4,8 +4,6 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import org.mindrot.jbcrypt.BCrypt;
-
 import java.sql.ResultSet;
 
 import com.atila.config.JdbcConnection;
@@ -17,7 +15,7 @@ public class MemberRepository {
 
     public void createMember(String name, String email, String phone, String statusMember, String user,
             String password) {
-        String query = ("INSERT INTO member(name,email,phone,status_member,library_id,user_name,password_hash) VALUES(?,?,?,?,?,?,?);");
+        String query = ("INSERT INTO member(name,email,phone,status_member,library_id,user_name,password_hash,role) VALUES(?,?,?,?,?,?,?);");
 
         String nameBd = name;
         String emailBd = email;
@@ -35,6 +33,34 @@ public class MemberRepository {
             ps.setInt(5, libraryIdBd);
             ps.setString(6, userBd);
             ps.setString(7, passwordBd);
+
+            ps.executeUpdate();
+        } catch (SQLException e) {
+            System.out.println(e);
+        }
+    }
+
+    public void createEmployee(String name, String email, String phone, String statusMember, String user,
+            String password) {
+        String query = ("INSERT INTO member(name,email,phone,status_member,library_id,user_name,password_hash,role) VALUES(?,?,?,?,?,?,?,?);");
+
+        String nameBd = name;
+        String emailBd = email;
+        String phoneBd = phone;
+        String statusBd = statusMember;
+        String userBd = user;
+        String passwordBd = password;
+        Integer libraryIdBd = 1;
+
+        try (PreparedStatement ps = conn.prepareStatement(query)) {
+            ps.setString(1, nameBd);
+            ps.setString(2, emailBd);
+            ps.setString(3, phoneBd);
+            ps.setString(4, statusBd);
+            ps.setInt(5, libraryIdBd);
+            ps.setString(6, userBd);
+            ps.setString(7, passwordBd);
+            ps.setString(8, "EMPLOYEE");
             ps.executeUpdate();
         } catch (SQLException e) {
             System.out.println(e);
@@ -94,7 +120,7 @@ public class MemberRepository {
         if (id == null) {
             throw new IllegalArgumentException("User id cannot be null");
         }
-        String query = ("SELECT name,email,phone,user_name FROM member WHERE id = ?;");
+        String query = ("SELECT name,email,phone,user_name,role FROM member WHERE id = ?;");
         Integer idBd = id;
 
         try (PreparedStatement ps = conn.prepareStatement(query)) {
@@ -107,8 +133,9 @@ public class MemberRepository {
                     String email = rs.getString("email");
                     String phone = rs.getString("phone");
                     String userName = rs.getString("user_name");
-
-                    return new User(name, email, phone, userName, id);
+                    String role = rs.getString("role");
+                    
+                    return new User(name, email, phone, userName, id, role);
 
                 } else {
 

@@ -7,9 +7,11 @@ public class Main {
     public static void main(String[] args) {
         Menus menus = new Menus();
 
-        //menus.createMemberMenu();
-        //menus.loginMenu();
-        //menus.userInfo();
+        boolean active = false;
+
+        menus.startMenu();
+
+
 
     }
 }

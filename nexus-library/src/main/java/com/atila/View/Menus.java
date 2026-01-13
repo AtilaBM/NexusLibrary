@@ -1,25 +1,120 @@
 package com.atila.View;
 
 import java.sql.SQLException;
+import java.util.List;
 import java.util.Scanner;
 
 import org.mindrot.jbcrypt.BCrypt;
 
 import com.atila.Enums.Categories;
+import com.atila.Enums.Role;
 import com.atila.model.User;
 import com.atila.services.LibraryService;
 
 public class Menus {
     Scanner sc = new Scanner(System.in);
     LibraryService lService = new LibraryService();
+
+    private User user;
     private Integer memberId;
+    private List<String> books;
+
+    public Menus() {
+    }
+
+    public Menus(User user) {
+        this.user = user;
+    }
 
     public void startMenu() {
         while (true) {
-            System.out.println("\n=== Library Menu ===");
-            System.out.println("1. Create Book");
-            System.out.println("2. Create Member");
+            printHeader("LIBRARY SYSTEM");
+            System.out.println("1. Login");
+            System.out.println("2. Create an account");
             System.out.println("0. Exit");
+            printSeparator();
+            System.out.print("Choose an option: ");
+            String choice = sc.nextLine();
+
+            switch (choice) {
+                case "1":
+                    loginMenu();
+                    if (memberId != null) {
+                        user = lService.userInfo(memberId);
+                        redirectByRole();
+                    }
+                    break;
+                case "2":
+                    memberMenu();
+                    break;
+                case "0":
+                    System.out.println("\n✓ Exiting... Goodbye!");
+                    return;
+                default:
+                    System.out.println("\n✗ Invalid option! Try again.\n");
+            }
+        }
+    }
+
+    private void redirectByRole() {
+        if (user == null || user.getRole() == null) {
+            System.out.println("\n✗ Error: Unable to identify user role.\n");
+            return;
+        }
+
+        String role = user.getRole();
+        
+       
+        if (role.equals("CUSTOMER")) {
+            customerMenu();
+        } else if (role.equals("ADMIN") || role.equals("EMPLOYEE")) {
+            employeeMenu();
+        } else {
+            System.out.println("\n✗ Unknown role: " + role + "\n");
+        }
+    }
+
+    private void customerMenu() {
+        while (true) {
+            printHeader("CUSTOMER MENU - Welcome " + user.getName());
+            System.out.println("1. View all books");
+            System.out.println("2. My information");
+            System.out.println("3. Search books");
+            System.out.println("0. Logout");
+            printSeparator();
+            System.out.print("Choose an option: ");
+            String choice = sc.nextLine();
+
+            switch (choice) {
+                case "1":
+                    booksMenu();
+                    break;
+                case "2":
+                    userInfo();
+                    break;
+                case "3":
+                    searchBooksMenu();
+                    break;
+                case "0":
+                    System.out.println("\n✓ Logging out...\n");
+                    memberId = null;
+                    user = null;
+                    return;
+                default:
+                    System.out.println("\n✗ Invalid option! Try again.\n");
+            }
+        }
+    }
+
+    private void employeeMenu() {
+        while (true) {
+            printHeader("EMPLOYEE MENU - Welcome " + user.getName());
+            System.out.println("1. Create new book");
+            System.out.println("2. View all books");
+            System.out.println("3. Create new member");
+            System.out.println("4. My information");
+            System.out.println("0. Logout");
+            printSeparator();
             System.out.print("Choose an option: ");
             String choice = sc.nextLine();
 
@@ -28,22 +123,58 @@ public class Menus {
                     createBookMenu();
                     break;
                 case "2":
-                    createMemberMenu();
+                    booksMenu();
+                    break;
+                case "3":
+                    if (user.getRole().equals("ADMIN")) {
+                        createEmployeeMenu();
+                    }
+                    System.out.println("Employee can't create a new employee account");
+                    break;
+                case "4":
+                    userInfo();
                     break;
                 case "0":
-                    System.out.println("Exiting...");
+                    System.out.println("\n✓ Logging out...\n");
+                    memberId = null;
+                    user = null;
                     return;
                 default:
-                    System.out.println("Invalid option! Try again.");
+                    System.out.println("\n✗ Invalid option! Try again.\n");
             }
         }
     }
 
-    public void createMemberMenu() {
-        System.out.println("\n==============================");
-        System.out.println("       CREATE NEW MEMBER      ");
-        System.out.println("==============================");
+    private void memberMenu() {
+        printHeader("MEMBER AREA");
+        System.out.println("1. Already have an account? Login");
+        System.out.println("2. Create a new account");
+        System.out.println("0. Back");
+        printSeparator();
+        System.out.print("Choose an option: ");
+        String op = sc.nextLine();
 
+        switch (op) {
+            case "1":
+                loginMenu();
+                if (memberId != null) {
+                    user = lService.userInfo(memberId);
+                    redirectByRole();
+                }
+                break;
+            case "2":
+                createMemberMenu();
+                break;
+            case "0":
+                return;
+            default:
+                System.out.println("\n✗ Invalid option! Try again.\n");
+        }
+    }
+
+    public void createMemberMenu() {
+        printHeader("CREATE NEW ACCOUNT");
+        
         System.out.print("Name: ");
         String name = sc.nextLine();
 
@@ -53,33 +184,50 @@ public class Menus {
         System.out.print("Phone: ");
         String phone = sc.nextLine();
 
-        System.out.println("\n==============================");
-        System.out.println("       CREATE NEW USER      ");
-        System.out.println("==============================");
-
-        System.out.print("User: ");
-        String user = sc.nextLine();
+        System.out.print("Username: ");
+        String username = sc.nextLine();
 
         System.out.print("Password: ");
         String password = sc.nextLine();
 
         String pw_hash = BCrypt.hashpw(password, BCrypt.gensalt());
 
-        lService.createMember(name, email, phone, user, pw_hash);
+        lService.createMember(name, email, phone, username, pw_hash);
+        System.out.println("\n✓ Account created successfully!\n");
+    }
+    public void createEmployeeMenu() {
+        printHeader("CREATE NEW ACCOUNT");
+        
+        System.out.print("Name: ");
+        String name = sc.nextLine();
 
+        System.out.print("Email: ");
+        String email = sc.nextLine();
+
+        System.out.print("Phone: ");
+        String phone = sc.nextLine();
+
+        System.out.print("Username: ");
+        String username = sc.nextLine();
+
+        System.out.print("Password: ");
+        String password = sc.nextLine();
+
+        String pw_hash = BCrypt.hashpw(password, BCrypt.gensalt());
+
+        lService.createEmployee(name, email, phone, username, pw_hash);
+        System.out.println("\n✓ Account created successfully!\n");
     }
 
     public void createBookMenu() {
-        System.out.println("\n==============================");
-        System.out.println("       CREATE NEW BOOK        ");
-        System.out.println("==============================");
+        printHeader("CREATE NEW BOOK");
 
         System.out.print("Title: ");
         String title = sc.nextLine();
 
-        System.out.print("Publication Year(XXXX): ");
+        System.out.print("Publication Year (YYYY): ");
         Integer publicationYear = sc.nextInt();
-        sc.nextLine();
+        sc.nextLine(); // Limpa o buffer
 
         System.out.print("Author: ");
         String author = sc.nextLine();
@@ -87,66 +235,122 @@ public class Menus {
         Categories category = categoriesMenu();
 
         lService.createBook(title, publicationYear, author, category);
-
+        System.out.println("\n✓ Book created successfully!\n");
     }
 
     private Categories categoriesMenu() {
         Categories[] categories = Categories.values();
 
-        System.out.println("\nChoose a category:");
+        System.out.println("\n--- Choose a category ---");
         for (int i = 0; i < categories.length; i++) {
-            System.out.println((i + 1) + " - " + categories[i]);
+            System.out.println((i + 1) + ". " + categories[i]);
         }
-
+        printSeparator();
         System.out.print("Option: ");
         int option = sc.nextInt();
+        sc.nextLine();
 
         if (option >= 1 && option <= categories.length) {
             return categories[option - 1];
         }
 
-        System.out.println("Invalid option, try again.");
+        System.out.println("\n✗ Invalid option, try again.\n");
         return categoriesMenu();
     }
 
     public void loginMenu() {
-        System.out.println("\n==============================");
-        System.out.println("            LOGIN        ");
-        System.out.println("==============================");
+        printHeader("LOGIN");
 
-        System.out.print("User: ");
-        String user = sc.nextLine();
+        System.out.print("Username: ");
+        String username = sc.nextLine();
 
         System.out.print("Password: ");
         String password = sc.nextLine();
 
         try {
-            memberId = lService.login(user, password);
+            memberId = lService.login(username, password);
 
+            if (memberId == null) {
+                System.out.println("\n✗ Login failed: Invalid username or password.\n");
+            } else {
+                System.out.println("\n✓ Login successful!\n");
+            }
         } catch (SQLException e) {
-            System.out.println(e);
-        }
-        if (memberId == null) {
-            System.out.println("Login failed: invalid user or password.");
-            return;
+            System.out.println("\n✗ Database error: " + e.getMessage() + "\n");
         }
     }
 
     public void userInfo() {
-        System.out.println("\n==============================");
-        System.out.println("            INFORMATION      ");
-        System.out.println("==============================");
-
-        User user = lService.userInfo(memberId);
+        printHeader("USER INFORMATION");
 
         if (user == null) {
-            System.out.println("User null");
+            user = lService.userInfo(memberId);
         }
 
-        System.out.println(user.getName());
-        System.out.println(user.getUser());
-        System.out.println(user.getEmail());
-        System.out.println(user.getPhone());
+        if (user == null) {
+            System.out.println("✗ Error: User not found.\n");
+            return;
+        }
 
+        System.out.println("Name:     " + user.getName());
+        System.out.println("Username: " + user.getUser());
+        System.out.println("Email:    " + user.getEmail());
+        System.out.println("Phone:    " + user.getPhone());
+        System.out.println("Role:     " + user.getRole());
+        printSeparator();
+        System.out.println();
     }
+
+    public void booksMenu() {
+        if (books == null) {
+            books = lService.allBooks();
+        }
+
+        printHeader("AVAILABLE BOOKS");
+
+        if (books == null || books.isEmpty()) {
+            System.out.println("No books available at the moment.\n");
+            return;
+        }
+
+        for (int i = 0; i < books.size(); i++) {
+            System.out.println((i + 1) + ". " + books.get(i));
+        }
+        printSeparator();
+        System.out.println();
+    }
+
+    // Métodos auxiliares para formatação
+    private void printHeader(String title) {
+        System.out.println("\n╔════════════════════════════════════════╗");
+        System.out.printf("║  %-36s  ║%n", title);
+        System.out.println("╚════════════════════════════════════════╝");
+    }
+
+    private void printSeparator() {
+        System.out.println("──────────────────────────────────────────");
+    }
+
+public void searchBooksMenu() {
+    printHeader("SEARCH BOOKS");
+    
+    System.out.print("Enter book title: ");
+    String keyword = sc.nextLine();
+    
+    List<String> results = lService.searchBooks(keyword);
+    
+    if (results == null || results.isEmpty()) {
+        System.out.println("\n✗ No books found with '" + keyword + "'.\n");
+        return;
+    }
+    
+    System.out.println("\n✓ Found " + results.size() + " book(s):\n");
+    for (int i = 0; i < results.size(); i++) {
+        System.out.println((i + 1) + ". " + results.get(i));
+    }
+    printSeparator();
+
+    //String bookName = results.get(choice - 1);
+    System.out.println();
+}
 }

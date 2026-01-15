@@ -15,7 +15,7 @@ public class MemberRepository {
 
     public void createMember(String name, String email, String phone, String statusMember, String user,
             String password) {
-        String query = ("INSERT INTO member(name,email,phone,status_member,library_id,user_name,password_hash,role) VALUES(?,?,?,?,?,?,?);");
+        String query = ("INSERT INTO member(name,email,phone,status_member,library_id,user_name,password_hash) VALUES(?,?,?,?,?,?,?);");
 
         String nameBd = name;
         String emailBd = email;

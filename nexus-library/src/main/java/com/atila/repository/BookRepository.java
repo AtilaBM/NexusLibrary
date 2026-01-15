@@ -41,7 +41,7 @@ public class BookRepository {
     }
 
     public List<String> allBooks() {
-        String query = ("SELECT title FROM book WHERE status_book = 'AVAILABLE';");
+        String query = ("SELECT title FROM book WHERE status_book = 'AVAILABLE' ORDER BY title;");
         List<String> books = new ArrayList<>();
 
         try (PreparedStatement ps = conn.prepareStatement(query)) {
@@ -58,7 +58,7 @@ public class BookRepository {
     }
 
     public List<String> searchBooks(String bookName) {
-        String query = ("SELECT title FROM book WHERE title ILIKE ?;");
+        String query = ("SELECT title FROM book WHERE title ILIKE ? AND status_book = 'AVAILABLE' ORDER BY title;");
         String titleDb = bookName;
         List<String> books = new ArrayList<>();
 
@@ -75,4 +75,38 @@ public class BookRepository {
         }
         return books;
     }
+
+    public Integer getBookId(String bookName)throws SQLException{
+        String query = ("SELECT id FROM book WHERE title = ?;");
+
+        try(PreparedStatement ps = conn.prepareStatement(query)){
+            ps.setString(1, bookName);
+            
+            try(ResultSet rs = ps.executeQuery()){
+             if (rs.next()) {
+                Integer bookId = rs.getInt("id");
+                return bookId;
+             }else{
+                return null;
+             }   
+            }
+                   
+                
+            
+        }
+    }
+
+   public void toggleBookStatus(Integer bookId) {
+    String query = "UPDATE book SET status_book = CASE " +
+                 "WHEN status_book = 'AVAILABLE' THEN 'BORROWED' " +
+                 "WHEN status_book = 'BORROWED' THEN 'AVAILABLE' " +
+                 "END WHERE id = ?";
+    
+    try (PreparedStatement ps = conn.prepareStatement(query)) {
+        ps.setInt(1, bookId);
+        ps.executeUpdate();
+    } catch (SQLException e) {
+        System.out.println("Error toggling book status: " + e.getMessage());
+    }
+}
 }

@@ -1,6 +1,8 @@
 package com.atila.View;
 
 import java.sql.SQLException;
+import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.List;
 import java.util.Scanner;
 
@@ -8,6 +10,7 @@ import org.mindrot.jbcrypt.BCrypt;
 
 import com.atila.Enums.Categories;
 import com.atila.Enums.Role;
+import com.atila.dto.LoanDetailsDTO;
 import com.atila.model.User;
 import com.atila.services.LibraryService;
 
@@ -45,7 +48,7 @@ public class Menus {
                     }
                     break;
                 case "2":
-                    memberMenu();
+                    createMemberMenu();
                     break;
                 case "0":
                     System.out.println("\n✓ Exiting... Goodbye!");
@@ -63,8 +66,7 @@ public class Menus {
         }
 
         String role = user.getRole();
-        
-       
+
         if (role.equals("CUSTOMER")) {
             customerMenu();
         } else if (role.equals("ADMIN") || role.equals("EMPLOYEE")) {
@@ -80,6 +82,8 @@ public class Menus {
             System.out.println("1. View all books");
             System.out.println("2. My information");
             System.out.println("3. Search books");
+            System.out.println("4. My information");
+            System.out.println("5. Books loaned");
             System.out.println("0. Logout");
             printSeparator();
             System.out.print("Choose an option: ");
@@ -94,6 +98,12 @@ public class Menus {
                     break;
                 case "3":
                     searchBooksMenu();
+                    break;
+                case "4":
+                    userInfo();
+                    break;
+                case "5":
+                    seeUserLoans();
                     break;
                 case "0":
                     System.out.println("\n✓ Logging out...\n");
@@ -113,6 +123,7 @@ public class Menus {
             System.out.println("2. View all books");
             System.out.println("3. Create new member");
             System.out.println("4. My information");
+            System.out.println("5. Show all loans");
             System.out.println("0. Logout");
             printSeparator();
             System.out.print("Choose an option: ");
@@ -125,14 +136,20 @@ public class Menus {
                 case "2":
                     booksMenu();
                     break;
+
                 case "3":
                     if (user.getRole().equals("ADMIN")) {
                         createEmployeeMenu();
+                    } else {
+                        System.out.println("\n✗ Employee can't create a new employee account\n");
                     }
-                    System.out.println("Employee can't create a new employee account");
                     break;
+
                 case "4":
                     userInfo();
+                    break;
+                case "5":
+                    seeAllLoans();
                     break;
                 case "0":
                     System.out.println("\n✓ Logging out...\n");
@@ -145,36 +162,9 @@ public class Menus {
         }
     }
 
-    private void memberMenu() {
-        printHeader("MEMBER AREA");
-        System.out.println("1. Already have an account? Login");
-        System.out.println("2. Create a new account");
-        System.out.println("0. Back");
-        printSeparator();
-        System.out.print("Choose an option: ");
-        String op = sc.nextLine();
-
-        switch (op) {
-            case "1":
-                loginMenu();
-                if (memberId != null) {
-                    user = lService.userInfo(memberId);
-                    redirectByRole();
-                }
-                break;
-            case "2":
-                createMemberMenu();
-                break;
-            case "0":
-                return;
-            default:
-                System.out.println("\n✗ Invalid option! Try again.\n");
-        }
-    }
-
     public void createMemberMenu() {
         printHeader("CREATE NEW ACCOUNT");
-        
+
         System.out.print("Name: ");
         String name = sc.nextLine();
 
@@ -195,9 +185,10 @@ public class Menus {
         lService.createMember(name, email, phone, username, pw_hash);
         System.out.println("\n✓ Account created successfully!\n");
     }
+
     public void createEmployeeMenu() {
         printHeader("CREATE NEW ACCOUNT");
-        
+
         System.out.print("Name: ");
         String name = sc.nextLine();
 
@@ -331,26 +322,89 @@ public class Menus {
         System.out.println("──────────────────────────────────────────");
     }
 
-public void searchBooksMenu() {
-    printHeader("SEARCH BOOKS");
-    
-    System.out.print("Enter book title: ");
-    String keyword = sc.nextLine();
-    
-    List<String> results = lService.searchBooks(keyword);
-    
-    if (results == null || results.isEmpty()) {
-        System.out.println("\n✗ No books found with '" + keyword + "'.\n");
-        return;
-    }
-    
-    System.out.println("\n✓ Found " + results.size() + " book(s):\n");
-    for (int i = 0; i < results.size(); i++) {
-        System.out.println((i + 1) + ". " + results.get(i));
-    }
-    printSeparator();
+    public void searchBooksMenu() {
+        printHeader("SEARCH BOOKS");
+        System.out.print("Enter book title: ");
+        String keyword = sc.nextLine();
+        List<String> results = lService.searchBooks(keyword);
 
-    //String bookName = results.get(choice - 1);
-    System.out.println();
-}
+        if (results == null || results.isEmpty()) {
+            System.out.println("\n✗ No books found with '" + keyword + "'.\n");
+            return;
+        }
+
+        System.out.println("\n✓ Found " + results.size() + " book(s):\n");
+        for (int i = 0; i < results.size(); i++) {
+            System.out.println((i + 1) + ". " + results.get(i));
+        }
+
+        printSeparator();
+        System.out.print("Do you want to loan a book (y/n): ");
+        String op = sc.nextLine();
+
+        if (op.equalsIgnoreCase("y")) {
+            System.out.print("Enter the book number: ");
+            Integer choice = sc.nextInt();
+            sc.nextLine(); // Limpar buffer
+
+            if (choice < 1 || choice > results.size()) {
+                System.out.println("\n✗ Invalid book number.\n");
+                return;
+            }
+
+            LocalDateTime date = LocalDateTime.now();
+            String bookName = results.get(choice - 1);
+
+            try {
+                lService.loanBook(date, bookName, memberId);
+                System.out.println("\n✓ Book loaned successfully!\n");
+            } catch (Exception e) {
+                System.out.println("\n✗ Error loaning book: " + e.getMessage() + "\n");
+            }
+        }
+
+        System.out.println();
+    }
+
+    public void seeAllLoans() {
+        printHeader("ALL LOANS");
+
+        try {
+            List<LoanDetailsDTO> results = lService.seeAllLoans();
+
+            if (results == null || results.isEmpty()) {
+                System.out.println("\n✗ No loans found with '.\n");
+                return;
+            }
+
+            System.out.println("\n✓ Found " + results.size() + " loan(s):\n");
+            for (LoanDetailsDTO loanDetailsDTO : results) {
+                System.out.println(loanDetailsDTO);
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+
+    }
+
+    public void seeUserLoans() {
+        printHeader("ALL LOANS");
+
+        try {
+            List<LoanDetailsDTO> results = lService.seeUserLoans(memberId);
+
+            if (results == null || results.isEmpty()) {
+                System.out.println("\n✗ No loans found with '.\n");
+                return;
+            }
+
+            System.out.println("\n✓ Found " + results.size() + " loan(s):\n");
+            for (LoanDetailsDTO loanDetailsDTO : results) {
+                System.out.println(loanDetailsDTO);
+            }
+        } catch (Exception e) {
+            System.out.println(e);
+        }
+
+    }
 }

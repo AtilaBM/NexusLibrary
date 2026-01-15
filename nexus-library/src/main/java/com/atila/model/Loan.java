@@ -19,6 +19,9 @@ public class Loan {
 
     public Integer book_id;
 
+    public Loan() {
+    }
+
     public Loan(Integer id, Date loanDate, Date dueDate, Date returnDate, StatusLoan status, Integer member_id,
             Integer book_id) {
 

@@ -155,11 +155,28 @@ public class LibraryService {
         }
     }
 
-    public List<LoanDetailsDTO> seeAllLoans() throws SQLException{
+    public List<LoanDetailsDTO> seeAllLoans() throws SQLException {
         return loanRepository.seeAllLoans();
     }
 
-    public List<LoanDetailsDTO> seeUserLoans(Integer memberId) throws SQLException{
+    public List<LoanDetailsDTO> seeUserLoans(Integer memberId) throws SQLException {
         return loanRepository.seeUserLoans(memberId);
+    }
+
+    public void returnLoan(LocalDateTime returnDate, String title, Integer memberId) {
+        if (returnDate == null || title == null || memberId == null) {
+            return;
+        }
+
+        try {
+            Integer bookId = bookRepository.getBookId(title);
+            if (bookId == null) {
+                return;
+            }
+            loanRepository.returnBook(returnDate, memberId, bookId);
+            bookRepository.toggleBookStatus(bookId);
+        } catch (Exception e) {
+            System.out.println(e);
+        }
     }
 }

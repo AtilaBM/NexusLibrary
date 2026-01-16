@@ -397,14 +397,41 @@ public class Menus {
                 System.out.println("\n✗ No loans found with '.\n");
                 return;
             }
-
+            Integer index = 1;
             System.out.println("\n✓ Found " + results.size() + " loan(s):\n");
             for (LoanDetailsDTO loanDetailsDTO : results) {
-                System.out.println(loanDetailsDTO);
+                System.out.println(index + " - " + loanDetailsDTO);
+                index++;
+            }
+
+            printSeparator();
+            System.out.print("Do you want to return a book (y/n): ");
+            String op = sc.nextLine();
+
+            if (op.equals("y")) {
+                System.out.print("Enter the loan number: ");
+                Integer choice = sc.nextInt();
+                sc.nextLine();
+
+                if (choice < 1 || choice > results.size()) {
+                    System.out.println("\n✗ Invalid loan number.\n");
+                    return;
+                }
+
+                LocalDateTime date = LocalDateTime.now();
+                String bookName = results.get(choice - 1).getBookTitle();
+
+                try {
+                    lService.returnLoan(date, bookName, memberId);
+                    System.out.println("\n✓ Book returned successfully!\n");
+                } catch (Exception e) {
+                    System.out.println("\n✗ Error returning book: " + e.getMessage() + "\n");
+                }
             }
         } catch (Exception e) {
             System.out.println(e);
         }
+        System.out.println();
 
     }
 }

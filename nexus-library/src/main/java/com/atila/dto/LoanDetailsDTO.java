@@ -65,7 +65,7 @@ public class LoanDetailsDTO {
     @Override
     public String toString() {
         return memberName + " - " + bookTitle + " (Loan date: " +
-                loanDate.toLocalDate() + ", Return date: " + returnDate.toLocalDate() +
+                loanDate.toLocalDate() + ", Due date: " + returnDate.toLocalDate() +
                 ") - " + statusLoan;
     }
 }

@@ -18,7 +18,7 @@ public class LibraryRepository {
                 + "CREATE TABLE IF NOT EXISTS book(id SERIAL PRIMARY KEY,title VARCHAR(100) NOT NULL,publication_year VARCHAR(100) NOT NULL,status_book VARCHAR(20) NOT NULL,library_id INTEGER REFERENCES library(id),author VARCHAR(100) NOT NULL,categories VARCHAR(20) NOT NULL);"
                 +
                 "CREATE TABLE IF NOT EXISTS member(id SERIAL PRIMARY KEY,name VARCHAR(100) NOT NULL,email VARCHAR(100) NOT NULL,phone VARCHAR(20) NOT NULL,status_member VARCHAR(20) NOT NULL,library_id INTEGER REFERENCES library(id),user_name VARCHAR(30) NOT NULL UNIQUE, password_hash VARCHAR(255) NOT NULL,role VARCHAR(20) NOT NULL DEFAULT 'CUSTOMER');"
-                + "CREATE TABLE IF NOT EXISTS loan(id SERIAL PRIMARY KEY,loan_date DATE NOT NULL,due_date Date NOT NULL,return_date Date NOT NULL,status_loan VARCHAR(20) NOT NULL,member_id INTEGER REFERENCES member(id),book_id INTEGER REFERENCES book(id));");
+                + "CREATE TABLE IF NOT EXISTS loan(id SERIAL PRIMARY KEY,loan_date DATE NOT NULL,due_date Date NOT NULL,return_date Date,status_loan VARCHAR(20) NOT NULL,member_id INTEGER REFERENCES member(id),book_id INTEGER REFERENCES book(id));");
 
         try (Statement st = conn.createStatement()) {
             st.execute(query);
